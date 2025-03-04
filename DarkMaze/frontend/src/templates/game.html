@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DarkMaze</title>
+    <style>
+        body {
+            text-align: center;
+            background-color: #111;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+
+        h1 {
+            margin-bottom: 5px;
+        }
+
+        #healthContainer {
+            font-size: 24px;
+            color: red;
+            margin-bottom: 10px;
+        }
+
+        canvas {
+            background-color: black;
+            border: 2px solid white;
+            margin-bottom: 10px;
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .row {
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            background-color: #444;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            font-size: 18px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        button:hover {
+            background-color: #666;
+        }
+
+
+        /* CSS動畫 - 閃爍效果 */
+        @keyframes flashRed {
+            0% {
+                background-color: #111;
+            }
+
+            50% {
+                background-color: red;
+            }
+
+            100% {
+                background-color: #111;
+            }
+        }
+
+        .flash {
+            animation: flashRed 0.5s ease-in-out;
+        }
+
+        /* 過關 / Game Over 畫面 */
+        .full-screen-message {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: black;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-size: 36px;
+            font-weight: bold;
+            z-index: 1000;
+        }
+
+        .full-screen-message p {
+            margin: 0;
+        }
+
+        .full-screen-message button {
+            margin-top: 20px;
+            font-size: 24px;
+            padding: 10px 20px;
+            background-color: red;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .full-screen-message button:hover {
+            background-color: darkred;
+        }
+
+        .full-screen-message button.logout {
+            background-color: #0313fc;
+        }
+
+        .full-screen-message button.logout:hover {
+            background-color: #020ca8;
+        }
+    </style>
+    <script>
+        function getCookie(name) {
+            let matches = document.cookie.match(new RegExp("(?:^|; )" + name + "=([^;]*)"));
+            return matches ? decodeURIComponent(matches[1]) : null;
+        }
+
+        if (!getCookie("user")) {
+            window.location.href = "/login";
+        }
+
+        let lastHealth = null;  // 儲存上次的生命值
+    </script>
+</head>
+
+<body>
+    <h1>DarkMaze</h1>
+    <div id="healthContainer"></div> <!-- 生命值顯示區塊 -->
+    <canvas id="mazeCanvas"></canvas>
+    <div class="controls">
+        <button onclick="move('up')">⬆️</button>
+        <div class="row">
+            <button onclick="move('left')">⬅️</button>
+            <button onclick="move('right')">➡️</button>
+        </div>
+        <button onclick="move('down')">⬇️</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById("mazeCanvas");
+        const ctx = canvas.getContext("2d");
+        let mapSize = [10, 10];
+        let cellSize = 40;
+
+        async function fetchMaze() {
+            try {
+                const username = getCookie("user");
+                const response = await fetch(`http://127.0.0.1:8000/api/v1/maze?username=${username}`);
+                const data = await response.json();
+                renderMaze(data);
+                updateHealth(data.health); // 更新生命值
+                console.log(data.health);
+
+                // 判斷生命值是否減少
+                if (lastHealth !== null && data.health < lastHealth) {
+                    triggerHealthAlert();  // 如果生命值減少，觸發閃爍效果
+                }
+
+                // 如果生命值為 0，顯示 Game Over 畫面
+                if (data.health === 0) {
+                    showMessageScreen("💀 GAME OVER 💀");
+                }
+
+                // 如果生命值為 666，顯示「過關」畫面
+                if (data.health === 666) {
+                    showMessageScreen("🎉 恭喜過關！ 🎉");
+                }
+
+                lastHealth = data.health;  // 更新上次的生命值
+            } catch (error) {
+                console.error("Error fetching maze data:", error);
+            }
+        }
+
+        function renderMaze(data) {
+            mapSize = data.map_size;
+            const path = data.path;
+            const currentPos = data.current_position;
+
+            canvas.width = mapSize[0] * cellSize;
+            canvas.height = mapSize[1] * cellSize;
+
+            ctx.fillStyle = "black";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = "white";
+            path.forEach(([x, y]) => {
+                ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+            });
+
+            ctx.fillStyle = "red";
+            ctx.fillRect(currentPos[0] * cellSize, currentPos[1] * cellSize, cellSize, cellSize);
+        }
+
+        function updateHealth(health) {
+            const healthContainer = document.getElementById("healthContainer");
+            if (health > 0 && health !== 666) {
+                healthContainer.innerHTML = "❤️".repeat(health); // 以愛心數量顯示生命值
+            } else {
+                healthContainer.innerHTML = "";
+            }
+        }
+
+        function triggerHealthAlert() {
+            const body = document.querySelector("body");
+            body.classList.add("flash");  // 加入閃爍樣式
+
+            setTimeout(() => {
+                body.classList.remove("flash");  // 閃爍結束後移除樣式
+            }, 500);  // 持續時間：500ms
+        }
+
+        function showMessageScreen(message) {
+            const messageDiv = document.createElement("div");
+            messageDiv.className = "full-screen-message";
+            messageDiv.innerHTML = `
+                <p>${message}</p>
+                <button onclick="restartGame()">重新開始</button>
+                <button class="logout" onclick="logout()">登出</button>
+            `;
+            document.body.appendChild(messageDiv);
+        }
+
+        async function restartGame() {
+            try {
+                const username = getCookie("user");
+                await fetch(`http://127.0.0.1:8000/api/v1/reset?username=${username}`);
+            } catch (error) {
+                console.error("Error restarting:", error);
+            }
+            window.location.reload(); // 重新載入頁面
+        }
+
+        async function move(direction) {
+            const username = getCookie("user");
+            await fetch(`http://127.0.0.1:8000/api/v1/move`, {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({username, direction})
+            });
+            fetchMaze();
+        }
+
+        function logout() {
+            document.cookie.split(";").forEach(cookie => {
+                const [name] = cookie.split("=");
+                document.cookie = `${name.trim()}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/`;
+            });
+
+            window.location.href = "/login";  // Redirect to login page after logout
+        }
+
+        document.addEventListener("keydown", (event) => {
+            const directions = {ArrowUp: "up", ArrowDown: "down", ArrowLeft: "left", ArrowRight: "right"};
+            if (directions[event.key]) {
+                move(directions[event.key]);
+            }
+        });
+
+        fetchMaze();
+    </script>
+</body>
+
+</html>
