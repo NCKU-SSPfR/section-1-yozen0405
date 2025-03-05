@@ -227,7 +227,7 @@ jobs:
             exit 1
           fi
           echo "Running SonarScanner..."
-          docker-compose -f ToolsHW/docker-compose.yml up sonar-scanner
+          docker-compose -p sonarqube_${{ github.event.repository.name }} -f ToolsHW/docker-compose.yml up sonar-scanner
       - name: Wait for SonarQube to finish analysis
         run: |
           echo "Waiting for SonarQube analysis to complete..."
