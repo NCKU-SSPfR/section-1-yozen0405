@@ -1,22 +1,20 @@
 import random
 
-# Constant settings
-RADIUS = 1
-NUM_POINTS = 1000000
-AREA_FACTOR = 4
-SQUARE_EXPONENT = 2
-POINT_COUNT_INCREMENT = 1
+CIRCLE_RADIUS = 1
+TOTAL_RANDOM_POINTS = 1_000_000  
+SQUARE_BOUNDARY = CIRCLE_RADIUS  
+QUARTER_CIRCLE_AREA_FACTOR = 4   
+EXPONENT_SQUARED = 2  
 
-inside_circle = 0
+inside_circle_count = 0
 
-# Randomly generate points and count those inside the circle
-for _ in range(NUM_POINTS):
-    x = random.uniform(-RADIUS, RADIUS)
-    y = random.uniform(-1, 1)
-    if x**SQUARE_EXPONENT + y**2 <= RADIUS**SQUARE_EXPONENT:
-        inside_circle += POINT_COUNT_INCREMENT
+for _ in range(TOTAL_RANDOM_POINTS):
+    x = random.uniform(-SQUARE_BOUNDARY, SQUARE_BOUNDARY)
+    y = random.uniform(-SQUARE_BOUNDARY, SQUARE_BOUNDARY)
+    
+    if x**EXPONENT_SQUARED + y**EXPONENT_SQUARED <= CIRCLE_RADIUS**EXPONENT_SQUARED:
+        inside_circle_count += 1
 
-# Estimate pi based on the number of points inside the circle
-pi_neapple = (inside_circle / NUM_POINTS) * AREA_FACTOR
+estimated_pi = (inside_circle_count / TOTAL_RANDOM_POINTS) * QUARTER_CIRCLE_AREA_FACTOR
 
-print(f"Estimated value of pi is: {pi_neapple}")
+print(f"Estimated value of pi is: {estimated_pi}")
