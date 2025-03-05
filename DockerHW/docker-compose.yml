@@ -2,3 +2,11 @@ version: '3'
 
 services:
   web:
+    build:
+      context: ./web  
+      dockerfile: Dockerfile
+    ports:
+      - "5001:5001"
+    volumes:
+      - ./web:/app
+    restart: always
