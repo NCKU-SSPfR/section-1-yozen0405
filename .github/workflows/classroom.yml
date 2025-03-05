@@ -269,7 +269,7 @@ jobs:
             fi
           done
           
-          docker-compose -p sonarqube_${{ github.event.repository.name }} -f -v ToolsHW/docker-compose.yml down -d sonarqube || true
+          docker-compose -p sonarqube_${{ github.event.repository.name }} -f ToolsHW/docker-compose.yml down -v || true
           sudo docker volume prune -f
           sudo docker system prune -a --volumes -f
           sudo docker image prune -a -f
@@ -602,7 +602,7 @@ jobs:
             pylint --output-format=json **/*.py > reports/pylint-report.json || true &&
             flake8 --format=json > reports/flake8-report.json || true
           "
-          docker-compose up -d sonar-scanner
+          docker-compose -p sonarqube_${{ github.event.repository.name }} up -d sonar-scanner
           
           STATUS=$(curl -s http://localhost:9000/api/system/status | jq -r '.status')
           if [[ "$STATUS" != "UP" ]]; then
@@ -614,7 +614,7 @@ jobs:
           export FLAKE8_REPORT=$(cat $PWD/reports/flake8-report.json)
           
           echo "Running SonarScanner for DarkMaze Backend..."
-          docker-compose up sonar-scanner
+          docker-compose -p sonarqube_${{ github.event.repository.name }} up sonar-scanner
 
           echo "SonarQube status: $STATUS, still waiting..."
           echo "----- SonarQube Logs (last 50 lines) -----"
