@@ -17,6 +17,13 @@ jobs:
       git_score: ${{ steps.githw.outputs.git_score }}
       student_id: ${{ steps.githw.outputs.student_id }}
     steps:
+      - name: Cleanup build folder
+        run: |
+            ls -la ./
+            rm -rf ./* || true
+            rm -rf ./.??* || true
+            ls -la ./
+            
       - name: Checkout code
         uses: actions/checkout@v3
 
