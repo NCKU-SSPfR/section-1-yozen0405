@@ -66,6 +66,7 @@ services:
     build: ./backend
     volumes:
       - ./backend/src:/app/src
+      - ./backend/game.db:/app/game.db
     ports:
       - "8000:8000"
     depends_on:
