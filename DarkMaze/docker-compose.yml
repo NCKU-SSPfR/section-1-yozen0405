@@ -36,7 +36,7 @@ services:
       pip3 install --no-cache-dir pylint flake8 &&
       mkdir -p /reports &&
       pylint --output-format=json /usr/src/**/*.py > /reports/pylint-report.json || true &&
-      flake8 --format=json /usr/src > /reports/flake8-report.json || true
+      flake8 --format=json /usr/src > /reports/flake8-report.json || true"
 
   sonar-scanner:
     image: sonarsource/sonar-scanner-cli
@@ -66,7 +66,6 @@ services:
     build: ./backend
     volumes:
       - ./backend/src:/app/src
-      - ./backend/game.db:/app/game.db
     ports:
       - "8000:8000"
     depends_on:
